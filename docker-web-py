@@ -1,0 +1,42 @@
+
+- hosts: all
+  tasks:
+  - name: setting up docker yum conf
+    yum_repository:
+      name: docker
+      description: desc for docker
+      baseurl: https://download.docker.com/linux/centos/7/x86_64/stable/
+      gpgcheck: no
+
+  - name: Installing docker
+    package:
+      name: "docker-ce-18.09.1-3.el7.x86_64"
+      state: present
+  - name: Install docker package
+    pip:
+      name: docker.py
+
+  - service:
+      name: "docker"
+      state: restarted
+
+  - name: Pull an Webserver docker image
+    docker_image:
+        name: httpd
+        source: pull
+  - file:
+      path: /ansible_1
+      state: directory
+  - copy:
+      dest: "/ansible_1/a.html"
+      content: "Welcome to docker world"
+
+  - name: Create a docker container to launch Webserver
+    community.general.docker_container:
+      name: Webserver
+      image: httpd
+      state: started
+      exposed_ports: "80"
+      ports: "3333:80"
+      volumes:
+        - /ansible_1:/usr/local/apache2/htdocs/
